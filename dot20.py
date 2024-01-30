@@ -1,12 +1,17 @@
 import json
 import re
 from substrateinterface import keypair
+from dotadb.db import DotaDB
 
 
 class Dot20:
 
+    def __init__(self, db_url: str):
+        self.dota_db = DotaDB(db_url=db_url)
+        self.p = "dot-20"
+
     # 部署
-    def deploy(self, **json_data) -> dict:
+    def deploy(self, **json_data):
         try:
             (json, memo) = self._fmt_json_data(op="deploy", **json_data)
         except Exception as e:
@@ -79,7 +84,7 @@ class Dot20:
             if self.is_valid_ss58_address(admin) is False:
                 raise Exception("控制者模式:admin不符合ss58规范")
 
-        return {
+        deploy_data = {
             "deployer": json.get("user"),
             "block_height": json.get("block_num"),
             "block_hash": json.get("block_hash"),
@@ -88,6 +93,14 @@ class Dot20:
             "remark_index": json.get("remark_index"),
             **memo
         }
+        try:
+            self.dota_db.create_tables_for_new_tick(tick=tick)
+            self.dota_db.insert_deploy_info(deploy_data)
+        except Exception as e:
+            print("========================")
+            print(f"{e}")
+            print("========================")
+            raise e
 
     # 铸造
     def mint(self, **json_data) -> dict:
@@ -122,7 +135,7 @@ class Dot20:
 
         # TODO:owner
 
-        return {
+        mint_data = {
             "singer": json.get("user"),
             "block_height": json.get("block_num"),
             "block_hash": json.get("block_hash"),
@@ -131,6 +144,10 @@ class Dot20:
             "remark_index": json.get("remark_index"),
             **memo
         }
+        try:
+            self.dota_db.insert_mint_info(tick=tick, mint_infos=[mint_data])
+        except Exception as e:
+            raise e
 
     # 验证address是否符合ss58规范
     def is_valid_ss58_address(_, address: str) -> bool:
@@ -141,12 +158,20 @@ class Dot20:
             return False
 
     # 获取deploy_info，并判断tick是否存在
-    def get_deploy_info(_, tick: str) -> None | dict:
-        # TODO:从数据库获取deploy信息
-        return None
+    def get_deploy_info(self, tick: str) -> None | dict:
+        # 从数据库获取deploy信息
+        try:
+            res = self.dota_db.get_deploy_info(tick=tick)
+            if len(res) == 0:
+                return None
+            else:
+                print(f"[999]:{res[0]}")
+                return res[0]
+        except Exception as e:
+            return None
 
     # 验证mint是否结束
-    def is_mint_finish(_, block_num, **deploy_info) -> bool:
+    def is_mint_finish(self, block_num, **deploy_info) -> bool:
         mode = deploy_info.get("mode")
         if mode == "normal":
             max = deploy_info.get("max")
@@ -162,7 +187,7 @@ class Dot20:
         return False
 
     # 格式化json_data
-    def _fmt_json_data(_, op: str, **data) -> (dict, dict):
+    def _fmt_json_data(self, op: str, **data) -> (dict, dict):
         try:
             data["memo"] = json.loads(data.get("memo"))
         except json.JSONDecodeError:
@@ -171,6 +196,8 @@ class Dot20:
         memo = data.get("memo")
         if memo is None:
             raise Exception("memo获取失败")
+        if memo.get("p") != self.p:
+            raise Exception("非dot-20数据")
         if memo.get("op") != op:
             raise Exception(f"请传入'{op}'的json数据")
 
