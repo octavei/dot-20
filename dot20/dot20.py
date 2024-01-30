@@ -97,9 +97,10 @@ class Dot20:
             "remark_index": json.get("remark_index"),
             **memo
         }
+        self.dota_db.create_tables_for_new_tick(tick)
         try:
-            self.dota_db.create_tables_for_new_tick(tick)
-            self.dota_db.insert_deploy_info(deploy_data)
+            with self.dota_db.session.begin():
+                self.dota_db.insert_deploy_info(deploy_data)
         except Exception as e:
             raise e
 
@@ -173,12 +174,14 @@ class Dot20:
             **memo
         }
         try:
-            self.dota_db.insert_mint_info(tick, [mint_data])
+            with self.dota_db.session.begin():
+                self.dota_db.insert_mint_info(tick, [mint_data])
             user_currency_balance = self.get_user_currency_balance(
                 tick, json.get("user"))
             if user_currency_balance is not None:
-                self.dota_db.insert_or_update_user_currency_balance(
-                    tick, user_currency_balance)
+                with self.dota_db.session.begin():
+                    self.dota_db.insert_or_update_user_currency_balance(
+                        tick, user_currency_balance)
         except Exception as e:
             raise e
 
