@@ -6,8 +6,8 @@ from dotadb.db import DotaDB
 
 class Dot20:
 
-    def __init__(self, db_url: str):
-        self.dota_db = DotaDB(db_url)
+    def __init__(self, db: DotaDB):
+        self.dota_db = db
         self.p = "dot-20"
 
     # 部署
