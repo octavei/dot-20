@@ -201,14 +201,6 @@ class Dot20:
         except Exception as e:
             raise e
 
-    # 验证address是否符合ss58规范
-    def is_valid_ss58_address(_, address: str) -> bool:
-        try:
-            keypair.ss58_decode(address).format(0)
-            return True
-        except ValueError:
-            return False
-
     # 获取deploy_info，并判断tick是否存在
     def get_deploy_info(self, tick: str):
         try:
