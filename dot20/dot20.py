@@ -98,9 +98,11 @@ class Dot20:
             **memo
         }
         self.dota_db.create_tables_for_new_tick(tick)
+        self.dota_db.session.commit()
         try:
             with self.dota_db.session.begin():
                 self.dota_db.insert_deploy_info(deploy_data)
+                self.dota_db.session.commit()
         except Exception as e:
             raise e
 
@@ -119,6 +121,13 @@ class Dot20:
         if deploy_info is None:
             raise Exception(f"{tick}'s deploy does not exist")
 
+        # 获取模式
+        mode = deploy_info.get("mode")
+        if mode is None:
+            raise Exception("Mode get failure")
+        if not mode in ["normal", "fair", "owner"]:
+            raise Exception("Unknown mode")
+
         # mint是否结束
         block_num = json.get("block_num")
         if block_num is None:
@@ -134,18 +143,11 @@ class Dot20:
             raise Exception(
                 "The address does not comply with the ss58 specification")
 
-        # 获取模式
-        mode = deploy_info.get("mode")
-        if mode is None:
-            raise Exception("Mode get failure")
-        if not mode in ["normal", "fair", "owner"]:
-            raise Exception("Unknown mode")
-
         # normal
+        lim = memo.get("lim")
+        if lim is None:
+            raise Exception("lim read failed")
         if mode == "normal":
-            lim = memo.get("lim")
-            if lim is None:
-                raise Exception("lim read failed")
             deploy_lim = deploy_info.get("lim")
             if deploy_lim is None:
                 raise Exception("deploy's lim read failed")
@@ -168,6 +170,7 @@ class Dot20:
             "singer": json.get("user"),
             "block_height": json.get("block_num"),
             "block_hash": json.get("block_hash"),
+            "extrinsic_hash": json.get("extrinsic_hash"),
             "extrinsic_index": json.get("extrinsic_index"),
             "batchall_index": json.get("batchall_index"),
             "remark_index": json.get("remark_index"),
@@ -176,19 +179,16 @@ class Dot20:
         try:
             with self.dota_db.session.begin():
                 self.dota_db.insert_mint_info(tick, [mint_data])
-            user_currency_balance = self.get_user_currency_balance(
-                tick, json.get("user"))
-            if user_currency_balance is not None:
-                with self.dota_db.session.begin():
-                    self.dota_db.insert_or_update_user_currency_balance(
-                        tick, user_currency_balance)
+            self.dota_db.session.commit()
+
+            self.update_user_currency_balance(tick, json.get("user"), lim)
         except Exception as e:
             raise e
 
     # 验证address是否符合ss58规范
     def is_valid_ss58_address(_, address: str) -> bool:
         try:
-            keypair.ss58_decode(address)
+            keypair.ss58_decode(address).format(0)
             return True
         except ValueError:
             return False
@@ -196,36 +196,59 @@ class Dot20:
     # 获取deploy_info，并判断tick是否存在
     def get_deploy_info(self, tick: str):
         try:
-            tbl_result = self.dota_db.get_deploy_info(tick)
-            if len(tbl_result) == 0:
+            results = self.dota_db.get_deploy_info(tick)
+            self.dota_db.session.commit()
+            if len(results) == 0:
                 return None
             else:
-                return tbl_result[0]
-        except Exception:
+                dicts = [dict(item._mapping) for item in results]
+                return dicts[0]
+        except Exception as e:
+            print(e)
             return None
 
     # 获取get_total_supply,已mint总量
     def get_total_supply(self, tick: str):
         try:
-            tbl_result = self.dota_db.get_total_supply(tick)
-            if len(tbl_result) == 0:
-                return None
+            result = self.dota_db.get_total_supply(tick)
+            self.dota_db.session.commit()
+            if result is not None:
+                return result[0]
             else:
-                return tbl_result[0]
+                return None
         except Exception:
+
             return None
 
     # 获取用户余额
     def get_user_currency_balance(self, tick: str, user: str):
         try:
-            tbl_result = self.dota_db.get_user_currency_balance(
+            result = self.dota_db.get_user_currency_balance(
                 tick, user)
-            if len(tbl_result) == 0:
-                return None
+            self.dota_db.session.commit()
+            if result is not None:
+                return dict(result._mapping)
             else:
-                return tbl_result[0]
+                return {"tick": tick, "user": user, "balance": 0}
         except Exception:
             return None
+
+    # 更新账户余额
+    def update_user_currency_balance(self, tick: str, user: str, amount: any):
+        try:
+            user_currency_balance = self.get_user_currency_balance(
+                tick, user)
+            balance = user_currency_balance.get("balance")
+            if balance + amount < 0:
+                raise Exception(f"{user} Insufficient balance")
+            if user_currency_balance is not None:
+                user_currency_balance["balance"] += amount
+                with self.dota_db.session.begin():
+                    self.dota_db.insert_or_update_user_currency_balance(
+                        tick, [user_currency_balance])
+                self.dota_db.session.commit()
+        except Exception as e:
+            raise e
 
     # 验证mint是否结束
     def is_mint_finish(self, block_num, **deploy_info) -> bool:
@@ -233,13 +256,13 @@ class Dot20:
                            for key in ['mode', 'max', 'tick'])
         if mode == "normal":
             total = self.get_total_supply(tick)
+            print(f"{total}------{max}")
             if max is not None and total is not None and total > max:
                 return True
         if mode == "fair":
             end = deploy_info.get("end")
             if end is not None and block_num is not None and block_num > end:
                 return True
-
         return False
 
     # 格式化json_data
