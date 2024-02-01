@@ -243,8 +243,8 @@ class Dot20MemoFilters:
                         "is_address": "user"
                     },
                     "memo": {
-                        "type": "string",
-                        "is_json_str": True
+                        "type": ["object", "string"],
+                        "is_json_str": "memo"
                     },
                 },
                 "required": ["block_num", "block_hash", "extrinsic_hash", "extrinsic_index", "batchall_index", "remark_index", "remark_hash", "origin", "user", "memo"],
@@ -305,4 +305,4 @@ class Dot20MemoFilters:
             try:
                 json.loads(instance)
             except json.JSONDecodeError as e:
-                raise ValidationError(f"{e.msg}")
+                raise ValidationError(f"{value}:{e.msg}")

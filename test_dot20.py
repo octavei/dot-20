@@ -3,6 +3,8 @@ from dot20.dot20 import Dot20
 from dotadb.db import DotaDB
 from decimal import Decimal
 
+from dot20.dot20_memo_filters import Dot20MemoFilters
+
 
 class TestDot20(unittest.TestCase):
     def __init__(self, methodName: str = "runTest") -> None:
@@ -100,6 +102,22 @@ class TestDot20(unittest.TestCase):
             self.dot20.transferFrom(**transfer_json)
         except Exception as e:
             print(f"MINT_ERR::{e}\n")
+
+        #  filter的使用方法
+
+        # filter = Dot20MemoFilters(valid_ss58_format=42)
+        # # 分类方法
+        # filter.is_deploy_memo(memo_data={})
+        # filter.is_mint_memo(memo_data={})
+        # filter.is_transfer_memo(memo_data={})
+        # filter.is_approve_memo(memo_data={})
+        # filter.is_transferFrom_memo(memo_data={})
+
+        # # 只用一个方法
+        # filter.is_memo_merge(op="deploy", memo_data={})
+
+        # # 原数据验证
+        # filter.is_raw_json(json_data={})
 
 
 if __name__ == '__main__':
