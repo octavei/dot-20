@@ -5,21 +5,10 @@ from jsonschema.exceptions import ValidationError
 from scalecodec.types import is_valid_ss58_address
 
 
-def is_address(validator, value, instance, schema):
-    if is_valid_ss58_address(instance, 0) is not True:
-        raise ValidationError(f"'{value}' Invalid address")
-
-
-def is_json_str(validator, value, instance, schema):
-    try:
-        json.loads(instance)
-    except json.JSONDecodeError as e:
-        raise ValidationError(f"{e.msg}")
-
-
 class Dot20MemoFilters:
 
-    def __init__(self) -> None:
+    def __init__(self, valid_ss58_format=0) -> None:
+        self.valid_ss58_format = valid_ss58_format
         self._schemas = {
             "deploy": {
                 "type": "object",
@@ -125,7 +114,7 @@ class Dot20MemoFilters:
                         "is_address": "to"
                     },
                 },
-                "required": ["p", "op", "tick"],
+                "required": ["p", "op", "tick", "lim", "to"],
                 "additionalProperties": False
             },
             "transfer": {
@@ -262,8 +251,8 @@ class Dot20MemoFilters:
             },
         }
         all_validators = dict(Draft7Validator.VALIDATORS)
-        all_validators['is_address'] = is_address
-        all_validators['is_json_str'] = is_json_str
+        all_validators['is_address'] = self.is_address
+        all_validators['is_json_str'] = self.is_json_str
         self.custom_validator = validators.create(
             Draft7Validator.META_SCHEMA, all_validators)
 
@@ -305,3 +294,14 @@ class Dot20MemoFilters:
             return True, "OK"
         except jsonschema.ValidationError as e:
             return False, f"{e.message}"
+
+    def is_address(self, validator, value, instance, schema):
+        if is_valid_ss58_address(instance, self.valid_ss58_format) is not True:
+            raise ValidationError(f"'{value}' Invalid address")
+
+    def is_json_str(_, validator, value, instance, schema):
+        if isinstance(instance, str):
+            try:
+                json.loads(instance)
+            except json.JSONDecodeError as e:
+                raise ValidationError(f"{e.msg}")

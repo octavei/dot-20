@@ -1,15 +1,14 @@
 import json
-import re
-from substrateinterface import keypair
 from dotadb.db import DotaDB
 from dot20.dot20_memo_filters import Dot20MemoFilters
 
 
 class Dot20:
 
-    def __init__(self, db: DotaDB):
+    def __init__(self, db: DotaDB, valid_ss58_format=0):
         self.dota_db = db
-        self.memo_filters = Dot20MemoFilters()
+        self.valid_ss58_format = valid_ss58_format
+        self.memo_filters = Dot20MemoFilters(valid_ss58_format)
 
     # 部署
     def deploy(self, **json_data):
@@ -18,22 +17,22 @@ class Dot20:
         except Exception as e:
             raise e
 
-        # 结构所有需要的memo数据
+        # 解构所有需要的memo数据
         data_keys = ["tick", "mode",
                      "start", "max", "lim", "amt", "end"]
         tick, mode, start, max, lim, amt, end = (memo.get(key)
                                                  for key in data_keys)
 
-        # 验证tick
+        # 验证tick是否已经存在
         if self.get_deploy_info(tick) is not None:
             raise Exception(f"'{tick}' already exist")
 
-        # 判断start与区块高度
-        if start < raw_json.get("raw_json"):
+        # 判断start高度需要大于等于区块高度
+        if start < raw_json.get("block_num"):
             raise Exception(
                 "start must be equal to or later than the deployment block height")
 
-        # 常规模式（normal，单次mint获得固定数量铭文）
+        # 1.常规模式（normal，单次mint获得固定数量铭文）
         # <start, max, lim>
         if mode == "normal":
             if lim == 0:
@@ -44,15 +43,15 @@ class Dot20:
                 raise Exception(
                     "The amount of lim cast at a time cannot be higher than max")
 
-        # 公平模式（fair，区块内平分铭文）
+        # 2.公平模式（fair，区块内平分铭文）
         # <amt, start, end>
         if mode == "fair":
             if amt*(end-start+1) > 10 ** 32:
                 raise Exception(
                     "amt*(end-start+1) must not be higher than 10^32")
 
-        # 控制者模式（owner，仅admin可以铸造铭文）
-        # 所有规则已经在memo_filter中判定
+        # 3.控制者模式（owner，仅admin可以铸造铭文）
+        # 地址必须性和可用性已经在memo_filter判定
 
         deploy_data = {
             "deployer": raw_json.get("user"),
@@ -68,7 +67,7 @@ class Dot20:
         try:
             with self.dota_db.session.begin():
                 self.dota_db.insert_deploy_info(deploy_data)
-                self.dota_db.session.commit()
+            self.dota_db.session.commit()
         except Exception as e:
             raise e
 
@@ -79,30 +78,29 @@ class Dot20:
         except Exception as e:
             raise e
 
-        # 结构所有需要的memo数据
-        data_keys = ["tick", "lim"]
-        tick, lim = (memo.get(key)
-                     for key in data_keys)
-
-        # 获取deploy info 验证tick是否存在
+        # 验证tick是否存在并且获取deployInfo
+        tick = memo.get("tick")
         deploy_info = self.get_deploy_info(tick)
         if deploy_info is None:
             raise Exception(f"{tick}'s deploy does not exist")
 
-        # 获取模式
+        # 获取deploy中的模式
         mode = deploy_info.get("mode")
         if mode is None:
             raise Exception("Mode get failure")
         if not mode in ["normal", "fair", "owner"]:
             raise Exception("Unknown mode")
 
-        # mint是否结束
+        # 判断mint是否结束
         if self.is_mint_finish(raw_json.get("block_num"), **deploy_info) is True:
             raise Exception("Mint has ended")
 
-        # normal
+        # lim是业务层根据模式计算后的值,可用于用户资产更新
+        lim = memo.get("lim")
         if lim is None:
-            raise Exception("lim read failed")
+            raise Exception("lim is none")
+
+        # 1.normal
         if mode == "normal":
             deploy_lim = deploy_info.get("lim")
             if deploy_lim is None:
@@ -111,33 +109,32 @@ class Dot20:
                 raise Exception(
                     "The quantity must not be higher than a single mint quantity")
 
-        # owner
+        # 2.fair区块高度判断，在判断是否mint结束完成
+
+        # 3.owner
         if mode == "owner":
-            user = json.get("user")
-            if user is None:
-                raise Exception("user read failed")
             deploy_owner = deploy_info.get("admin")
             if deploy_owner is None:
                 raise Exception("deploy's owner read failed")
-            if user != deploy_owner:
+            if raw_json.get("user") != deploy_owner:
                 raise Exception("Only the owner address can be mint")
 
         mint_data = {
-            "singer": json.get("user"),
-            "block_height": json.get("block_num"),
-            "block_hash": json.get("block_hash"),
-            "extrinsic_hash": json.get("extrinsic_hash"),
-            "extrinsic_index": json.get("extrinsic_index"),
-            "batchall_index": json.get("batchall_index"),
-            "remark_index": json.get("remark_index"),
+            "singer": raw_json.get("user"),
+            "block_height": raw_json.get("block_num"),
+            "block_hash": raw_json.get("block_hash"),
+            "extrinsic_hash": raw_json.get("extrinsic_hash"),
+            "extrinsic_index": raw_json.get("extrinsic_index"),
+            "batchall_index": raw_json.get("batchall_index"),
+            "remark_index": raw_json.get("remark_index"),
             **memo
         }
         try:
             with self.dota_db.session.begin():
                 self.dota_db.insert_mint_info(tick, [mint_data])
             self.dota_db.session.commit()
-
-            self.update_user_currency_balance(tick, json.get("user"), lim)
+            self.update_user_currency_balance(
+                tick, raw_json.get("user"), lim)
         except Exception as e:
             raise e
 
@@ -148,7 +145,7 @@ class Dot20:
         except Exception as e:
             raise e
 
-        # 获取deploy info 验证tick是否存在
+        # 验证tick是否存在并获取deploy info
         tick = memo.get("tick")
         deploy_info = self.get_deploy_info(tick)
         if deploy_info is None:
@@ -161,7 +158,7 @@ class Dot20:
         if not mode in ["normal", "fair", "owner"]:
             raise Exception("Unknown mode")
 
-        # normal/fair mint中无法转账
+        # normal/fair模式mint中无法转账
         if mode in ["normal", "fair"]:
             block_num = raw_json.get("block_num")
             if self.is_mint_finish(block_num, **deploy_info) is False:
@@ -188,20 +185,20 @@ class Dot20:
 
         try:
 
-            # 1.扣款 余额异常会抛异常
+            # 1.from扣款[余额异常会抛异常]
             self.update_user_currency_balance(
                 tick, raw_json.get("user"), -memo.get("amt"))
-            # 2.进账
+            # 2.to进账
             self.update_user_currency_balance(
                 tick, memo.get("to"), memo.get("amt"))
-
+            # 3.增加记录
             with self.dota_db.session.begin():
                 self.dota_db.insert_transfer_info(tick, [transfer_data])
             self.dota_db.session.commit()
         except Exception as e:
             raise e
 
-    # 获取deploy_info，并判断tick是否存在
+    # 判断tick是否存在 / 获取deploy_info
     def get_deploy_info(self, tick: str):
         try:
             results = self.dota_db.get_deploy_info(tick)
@@ -279,11 +276,17 @@ class Dot20:
             raise Exception(f"{raw_msg}")
 
         # 检查memo json格式
-        memo_json = json.loads(data.get("memo"))
+        memo = data.get("memo")
+        if isinstance(memo, str):
+            memo_json = json.loads(memo)
+        else:
+            memo_json = memo
+
         (is_memo, memo_msg) = self.memo_filters.is_memo_merge(
             op, memo_data=memo_json)
         if is_memo is not True:
             raise Exception(f"{memo_msg}")
 
         del data["memo"]
+
         return data, dict(memo_json)
