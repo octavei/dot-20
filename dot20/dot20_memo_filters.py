@@ -202,6 +202,22 @@ class Dot20MemoFilters:
                 "required": ["p", "op", "tick", "amt", "from", "to"],
                 "additionalProperties": False
             },
+            "memo": {
+                "type": "object",
+                "properties": {
+                    "p": {
+                        "enum": ["dot-20"]
+                    },
+                    "op": {
+                        "enum": ["memo"]
+                    },
+                    "text": {
+                        "type": "string",
+                    },
+                },
+                "required": ["p", "op", "text"],
+                "additionalProperties": False
+            },
             "rawJson": {
                 "type": "object",
                 "properties": {
@@ -273,16 +289,20 @@ class Dot20MemoFilters:
     def is_approve_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("approve", json_data=memo_data)
 
-    # 判断是否是deploy的memo
+    # 判断是否是transferFrom的memo
     def is_transferFrom_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("transferFrom", json_data=memo_data)
+
+    # 判断是否是memo的memo
+    def is_memo_memo(self, memo_data: object) -> (bool, str):
+        return self.__is_xx_json("memo", json_data=memo_data)
 
     # 判断原json格式
     def is_raw_json(self, json_data: object) -> (bool, str):
         return self.__is_xx_json("rawJson", json_data=json_data)
 
     # 判断是否是memo的合并方法，需要手动传入op
-    # op: enum["deploy","mint","transfer","approve","transferFrom", "rawJson"]
+    # op: enum["deploy","mint","transfer","approve","transferFrom", "rawJson","memo"]
     def is_memo_merge(self, op: str, memo_data: object) -> (bool, str):
         if not op in self._schemas:
             return False, "There is no matching schema"

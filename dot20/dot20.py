@@ -408,9 +408,9 @@ class Dot20:
     # 格式化json_data
     def fmt_json_data(self, op: str, **data) -> (dict, dict):
         # 检查原json格式
-        (is_raw, raw_msg) = self.memo_filters.is_raw_json(json_data=data)
-        if is_raw is not True:
-            raise Exception(f"{raw_msg}")
+        # (is_raw, raw_msg) = self.memo_filters.is_raw_json(json_data=data)
+        # if is_raw is not True:
+        #     raise Exception(f"{raw_msg}")
 
         # 检查memo json格式
         memo = data.get("memo")
