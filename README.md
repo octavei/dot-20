@@ -27,6 +27,8 @@ pip freeze > requirements.txt
 pip install -r requirements.txt
 ```
 
+## 依赖 dota-index-db
+
 ```bash
 pip install git+https://github.com/octavei/dota-indexer-db.git
 pip install --upgrade git+https://github.com/octavei/dota-indexer-db.git

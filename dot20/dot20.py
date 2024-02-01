@@ -258,7 +258,7 @@ class Dot20:
             raise e
 
         # 不能给自己转账
-        if raw_json.get("user") == memo.get("to"):
+        if memo.get("from") == memo.get("to"):
             raise Exception("You can't transfer money to yourself")
 
         # amt需要大于0
@@ -286,8 +286,13 @@ class Dot20:
                 raise Exception("Mint is in progress, unable to transfer")
 
         # 是否已经授权
-        if self.get_user_approve_amount(memo.get("tick"), memo.get("to"), memo.get("from")) <= 0:
+        approve_amount = self.get_user_approve_amount(
+            memo.get("tick"), memo.get("to"), memo.get("from"))
+        if approve_amount <= 0:
             raise Exception("Unauthorized transfers")
+        if memo.get("amt") > approve_amount:
+            raise Exception(
+                "The transfer amount is greater than the authorized amount")
 
         transfer_from_data = {
             "user": raw_json.get("user"),

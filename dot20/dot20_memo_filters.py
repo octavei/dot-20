@@ -192,6 +192,7 @@ class Dot20MemoFilters:
                     },
                     "from": {
                         "type": "string",
+                        "is_address": "from"
                     },
                     "to": {
                         "type": "string",
