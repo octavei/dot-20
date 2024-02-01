@@ -145,6 +145,15 @@ class Dot20:
         except Exception as e:
             raise e
 
+        # 不能给自己转账
+        if raw_json.get("user") == memo.get("to"):
+            raise Exception("You can't transfer money to yourself")
+
+        # amt需要大于0
+        if memo.get("amt") <= 0:
+            raise Exception(
+                "The number of transfers is less than or equal to 0")
+
         # 验证tick是否存在并获取deploy info
         tick = memo.get("tick")
         deploy_info = self.get_deploy_info(tick)
@@ -163,10 +172,6 @@ class Dot20:
             block_num = raw_json.get("block_num")
             if self.is_mint_finish(block_num, **deploy_info) is False:
                 raise Exception("Mint is in progress, unable to transfer")
-
-        # 不能给自己转账
-        if raw_json.get("user") == memo.get("to"):
-            raise Exception("You can't transfer money to yourself")
 
         transfer_data = {
             "user": raw_json.get("user"),
@@ -198,6 +203,122 @@ class Dot20:
         except Exception as e:
             raise e
 
+    # 授权
+    def approve(self, **json_data):
+        try:
+            (raw_json, memo) = self._fmt_json_data("approve", **json_data)
+        except Exception as e:
+            raise e
+
+        # 不能给自己授权
+        if raw_json.get("user") == memo.get("to"):
+            raise Exception("You can't approve to yourself")
+
+        # 验证tick是否存在并获取deploy info
+        tick = memo.get("tick")
+        deploy_info = self.get_deploy_info(tick)
+        if deploy_info is None:
+            raise Exception(f"{tick}'s deploy does not exist")
+
+        approve_data = {
+            "user": memo.get("to"),
+            "from_address": raw_json.get("user"),
+            "tick": memo.get("tick"),
+            "amount": memo.get("amt"),
+        }
+
+        approve_history_data = {
+            "user": memo.get("to"),
+            "from": raw_json.get("user"),
+            "tick": memo.get("tick"),
+            "amount": memo.get("amt"),
+            "block_height": raw_json.get("block_num"),
+            "block_hash": raw_json.get("block_hash"),
+            "extrinsic_index": raw_json.get("extrinsic_index"),
+            "batchall_index": raw_json.get("batchall_index"),
+            "remark_index": raw_json.get("remark_index"),
+        }
+
+        try:
+            # 1.更新approve
+            self.dota_db.insert_or_update_user_approve(tick, [approve_data])
+            self.dota_db.session.commit()
+
+            # 2.新增记录
+            self.dota_db.insert_approve_history(tick, [approve_history_data])
+            self.dota_db.session.commit()
+        except Exception as e:
+            raise e
+
+    # 授权转账
+    def transferFrom(self, **json_data):
+        try:
+            (raw_json, memo) = self._fmt_json_data("transferFrom", **json_data)
+        except Exception as e:
+            raise e
+
+        # 不能给自己转账
+        if raw_json.get("user") == memo.get("to"):
+            raise Exception("You can't transfer money to yourself")
+
+        # amt需要大于0
+        if memo.get("amt") <= 0:
+            raise Exception(
+                "The number of transfers is less than or equal to 0")
+
+        # 验证tick是否存在并获取deploy info
+        tick = memo.get("tick")
+        deploy_info = self.get_deploy_info(tick)
+        if deploy_info is None:
+            raise Exception(f"{tick}'s deploy does not exist")
+
+        # 获取模式
+        mode = deploy_info.get("mode")
+        if mode is None:
+            raise Exception("Mode get failure")
+        if not mode in ["normal", "fair", "owner"]:
+            raise Exception("Unknown mode")
+
+        # normal/fair模式mint中无法转账
+        if mode in ["normal", "fair"]:
+            block_num = raw_json.get("block_num")
+            if self.is_mint_finish(block_num, **deploy_info) is False:
+                raise Exception("Mint is in progress, unable to transfer")
+
+        # 是否已经授权
+        if self.get_user_approve_amount(memo.get("tick"), memo.get("to"), memo.get("from")) <= 0:
+            raise Exception("Unauthorized transfers")
+
+        transfer_from_data = {
+            "user": raw_json.get("user"),
+            "block_height": raw_json.get("block_num"),
+            "block_hash": raw_json.get("block_hash"),
+            "extrinsic_hash": raw_json.get("extrinsic_hash"),
+            "extrinsic_index": raw_json.get("extrinsic_index"),
+            "batchall_index": raw_json.get("batchall_index"),
+            "remark_index": raw_json.get("remark_index"),
+            "amount": memo.get("amt"),
+            "from": memo.get("from"),
+            "to": memo.get("to"),
+            "tick": memo.get("tick"),
+            "type": 1,
+        }
+
+        try:
+
+            # 1.from扣款[余额异常会抛异常]
+            self.update_user_currency_balance(
+                tick, memo.get("from"), -memo.get("amt"))
+            # 2.to进账
+            self.update_user_currency_balance(
+                tick, memo.get("to"), memo.get("amt"))
+            # 3.增加记录
+            with self.dota_db.session.begin():
+                self.dota_db.insert_transfer_info(tick, [transfer_from_data])
+            self.dota_db.session.commit()
+        except Exception as e:
+            raise e
+
     # 判断tick是否存在 / 获取deploy_info
     def get_deploy_info(self, tick: str):
         try:
@@ -222,7 +343,6 @@ class Dot20:
             else:
                 return None
         except Exception:
-
             return None
 
     # 获取用户余额
@@ -267,6 +387,18 @@ class Dot20:
             if end is not None and block_num is not None and block_num > end:
                 return True
         return False
+
+    # 获取to地址的授权量
+    def get_user_approve_amount(self, tick: str, to: str, _from: str):
+        try:
+            result = self.dota_db.get_user_approve_amount(tick, to, _from)
+            self.dota_db.session.commit()
+            if result is not None:
+                return result[0]
+            else:
+                return -1
+        except Exception:
+            return -1
 
     # 格式化json_data
     def _fmt_json_data(self, op: str, **data) -> (dict, dict):
