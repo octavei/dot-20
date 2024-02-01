@@ -13,7 +13,7 @@ class Dot20:
     # 部署
     def deploy(self, **json_data):
         try:
-            (raw_json, memo) = self._fmt_json_data("deploy", **json_data)
+            (raw_json, memo) = self.fmt_json_data("deploy", **json_data)
         except Exception as e:
             raise e
 
@@ -74,7 +74,7 @@ class Dot20:
     # 铸造
     def mint(self, **json_data):
         try:
-            (raw_json, memo) = self._fmt_json_data("mint", **json_data)
+            (raw_json, memo) = self.fmt_json_data("mint", **json_data)
         except Exception as e:
             raise e
 
@@ -141,7 +141,7 @@ class Dot20:
     # 转账
     def transfer(self, **json_data):
         try:
-            (raw_json, memo) = self._fmt_json_data("transfer", **json_data)
+            (raw_json, memo) = self.fmt_json_data("transfer", **json_data)
         except Exception as e:
             raise e
 
@@ -206,7 +206,7 @@ class Dot20:
     # 授权
     def approve(self, **json_data):
         try:
-            (raw_json, memo) = self._fmt_json_data("approve", **json_data)
+            (raw_json, memo) = self.fmt_json_data("approve", **json_data)
         except Exception as e:
             raise e
 
@@ -253,7 +253,7 @@ class Dot20:
     # 授权转账
     def transferFrom(self, **json_data):
         try:
-            (raw_json, memo) = self._fmt_json_data("transferFrom", **json_data)
+            (raw_json, memo) = self.fmt_json_data("transferFrom", **json_data)
         except Exception as e:
             raise e
 
@@ -406,7 +406,7 @@ class Dot20:
             return -1
 
     # 格式化json_data
-    def _fmt_json_data(self, op: str, **data) -> (dict, dict):
+    def fmt_json_data(self, op: str, **data) -> (dict, dict):
         # 检查原json格式
         (is_raw, raw_msg) = self.memo_filters.is_raw_json(json_data=data)
         if is_raw is not True:
