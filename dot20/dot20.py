@@ -297,8 +297,7 @@ class Dot20:
                 dicts = [dict(item._mapping) for item in results]
                 return dicts[0]
         except Exception as e:
-            print(e)
-            return None
+            raise e
 
     # 获取get_total_supply,已mint总量
     def get_total_supply(self, tick: str):
@@ -320,18 +319,18 @@ class Dot20:
                 return dict(result._mapping)
             else:
                 return {"tick": tick, "user": user, "balance": 0}
-        except Exception:
-            return None
+        except Exception as e:
+            raise e
 
     # 更新账户余额
     def update_user_currency_balance(self, tick: str, user: str, amount: any):
         try:
             user_currency_balance = self.get_user_currency_balance(
                 tick, user)
-            balance = user_currency_balance.get("balance")
-            if balance + amount < 0:
-                raise Exception(f"{user} Insufficient balance")
             if user_currency_balance is not None:
+                balance = user_currency_balance.get("balance")
+                if balance + amount < 0:
+                    raise Exception(f"{user} Insufficient balance")
                 user_currency_balance["balance"] += amount
                 self.dota_db.insert_or_update_user_currency_balance(
                     tick, [user_currency_balance])

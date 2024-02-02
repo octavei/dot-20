@@ -39,16 +39,19 @@ class TestDot20():
                     "memo_remark": "1111"
                 }
             }
-            self.dot20.deploy(**deploy_json)
-            self.db.session.commit()
+            # self.dot20.deploy(**deploy_json)
+            # self.db.session.commit()
+            # self.test_mint()
+            self.test_transfer()
+            # self.db.session.commit()
         except Exception as e:
-            self.db.session.commit()
+            # self.db.session.commit()
             print(f"======DEPLOY_ERR=======\n{e}\n=================")
 
     def test_mint(self):
         try:
-            mint_json = {
-                "block_num": 273114,
+            mint_json1 = {
+                "block_num": 273116,
                 "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
                 "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
                 "extrinsic_index": 2,
@@ -66,16 +69,36 @@ class TestDot20():
                     "memo_remark": "2222"
                 }
             }
-            self.dot20.mint(**mint_json)
-            self.db.session.commit()
+            mint_json2 = {
+                "block_num": 273117,
+                "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
+                "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
+                "extrinsic_index": 2,
+                "batchall_index": 0,
+                "remark_index": 0,
+                "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
+                "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "memo": {
+                    "p": "dot-20",
+                    "op": "mint",
+                    "tick": "dota",
+                    "lim": 10000,
+                    "to": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                    "memo_remark": "2222"
+                }
+            }
+            self.dot20.mint(**mint_json1)
+            self.dot20.mint(**mint_json2)
+            # self.db.session.commit()
         except Exception as e:
-            self.db.session.commit()
+            # self.db.session.commit()
             print(f"======MINT_ERR=======\n{e}\n=================")
 
     def test_transfer(self):
         try:
-            transfer_json = {
-                "block_num": 273149,
+            transfer_json1 = {
+                "block_num": 273167,
                 "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
                 "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
                 "extrinsic_index": 2,
@@ -93,7 +116,27 @@ class TestDot20():
                     "memo_remark": "3333"
                 }
             }
-            self.dot20.transfer(**transfer_json)
+            transfer_json2 = {
+                "block_num": 273167,
+                "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
+                "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
+                "extrinsic_index": 2,
+                "batchall_index": 0,
+                "remark_index": 0,
+                "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
+                "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "memo": {
+                    "p": "dot-20",
+                    "op": "transfer",
+                    "tick": "dota",
+                    "amt": 100,
+                    "to": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+                    "memo_remark": "3333"
+                }
+            }
+            self.dot20.transfer(**transfer_json1)
+            self.dot20.transfer(**transfer_json2)
             self.db.session.commit()
         except Exception as e:
             self.db.session.commit()
@@ -195,8 +238,8 @@ class TestDot20():
 if __name__ == '__main__':
     test = TestDot20()
 
-    # test.test_deploy()
-    test.test_mint()
+    test.test_deploy()
+    # test.test_mint()
     # test.test_transfer()
     # test.test_approve()
     # test.test_transfer_from()
