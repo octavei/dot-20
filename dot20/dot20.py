@@ -18,10 +18,7 @@ class Dot20:
             raise e
 
         # 解构所有需要的memo数据
-        data_keys = ["tick", "mode",
-                     "start", "max", "lim", "amt", "end"]
-        tick, mode, start, max, lim, amt, end = (memo.get(key)
-                                                 for key in data_keys)
+        tick, start = (memo.get(key) for key in ["tick", "start"])
 
         # 验证tick是否已经存在
         if self.get_deploy_info(tick) is not None:
@@ -32,13 +29,6 @@ class Dot20:
             raise Exception(
                 "start must be equal to or later than the deployment block height")
 
-        # 1.常规模式（normal，单次mint获得固定数量铭文）
-        # <start, max, lim>
-        # 2.公平模式（fair，区块内平分铭文）
-        # <amt, start, end>
-        # 3.控制者模式（owner，仅admin可以铸造铭文）
-        # 地址必须性和可用性已经在memo_filter判定
-
         deploy_data = {
             "deployer": raw_json.get("user"),
             "block_height": raw_json.get("block_num"),
@@ -48,12 +38,9 @@ class Dot20:
             "remark_index": raw_json.get("remark_index"),
             **memo
         }
-        self.dota_db.create_tables_for_new_tick(tick)
-        self.dota_db.session.commit()
         try:
-            with self.dota_db.session.begin():
-                self.dota_db.insert_deploy_info(deploy_data)
-            self.dota_db.session.commit()
+            self.dota_db.create_tables_for_new_tick(tick)
+            self.dota_db.insert_deploy_info(deploy_data)
         except Exception as e:
             raise e
 
@@ -114,9 +101,7 @@ class Dot20:
             **memo
         }
         try:
-            with self.dota_db.session.begin():
-                self.dota_db.insert_mint_info(tick, [mint_data])
-            self.dota_db.session.commit()
+            self.dota_db.insert_mint_info(tick, [mint_data])
             self.update_user_currency_balance(
                 tick, raw_json.get("user"), lim)
         except Exception as e:
@@ -176,9 +161,7 @@ class Dot20:
             self.update_user_currency_balance(
                 tick, memo.get("to"), memo.get("amt"))
             # 3.增加记录
-            with self.dota_db.session.begin():
-                self.dota_db.insert_transfer_info(tick, [transfer_data])
-            self.dota_db.session.commit()
+            self.dota_db.insert_transfer_info(tick, [transfer_data])
         except Exception as e:
             raise e
 
@@ -221,11 +204,9 @@ class Dot20:
         try:
             # 1.更新approve
             self.dota_db.insert_or_update_user_approve(tick, [approve_data])
-            self.dota_db.session.commit()
 
             # 2.新增记录
             self.dota_db.insert_approve_history(tick, [approve_history_data])
-            self.dota_db.session.commit()
         except Exception as e:
             raise e
 
@@ -256,11 +237,11 @@ class Dot20:
                 raise Exception("Mint is in progress, unable to transfer")
 
         # 是否已经授权
-        approve_amount = self.get_user_approve_amount(
+        approve = self.get_user_approve(
             memo.get("tick"), memo.get("to"), memo.get("from"))
-        if approve_amount <= 0:
+        if approve is None:
             raise Exception("Unauthorized transfers")
-        if memo.get("amt") > approve_amount:
+        if memo.get("amt") > approve.get("amount"):
             raise Exception(
                 "The transfer amount is greater than the authorized amount")
 
@@ -287,10 +268,12 @@ class Dot20:
             # 2.to进账
             self.update_user_currency_balance(
                 tick, memo.get("to"), memo.get("amt"))
-            # 3.增加记录
-            with self.dota_db.session.begin():
-                self.dota_db.insert_transfer_info(tick, [transfer_from_data])
-            self.dota_db.session.commit()
+            # 3.增加转账记录
+            self.dota_db.insert_transfer_info(tick, [transfer_from_data])
+            # 4.更新approve
+            approve["amount"] -= memo.get("amt")
+            self.dota_db.insert_or_update_user_approve(tick, [approve])
+
         except Exception as e:
             raise e
 
@@ -298,7 +281,6 @@ class Dot20:
     def get_deploy_info(self, tick: str):
         try:
             results = self.dota_db.get_deploy_info(tick)
-            self.dota_db.session.commit()
             if len(results) == 0:
                 return None
             else:
@@ -312,7 +294,6 @@ class Dot20:
     def get_total_supply(self, tick: str):
         try:
             result = self.dota_db.get_total_supply(tick)
-            self.dota_db.session.commit()
             if result is not None:
                 return result[0]
             else:
@@ -325,7 +306,6 @@ class Dot20:
         try:
             result = self.dota_db.get_user_currency_balance(
                 tick, user)
-            self.dota_db.session.commit()
             if result is not None:
                 return dict(result._mapping)
             else:
@@ -343,10 +323,8 @@ class Dot20:
                 raise Exception(f"{user} Insufficient balance")
             if user_currency_balance is not None:
                 user_currency_balance["balance"] += amount
-                with self.dota_db.session.begin():
-                    self.dota_db.insert_or_update_user_currency_balance(
-                        tick, [user_currency_balance])
-                self.dota_db.session.commit()
+                self.dota_db.insert_or_update_user_currency_balance(
+                    tick, [user_currency_balance])
         except Exception as e:
             raise e
 
@@ -364,16 +342,15 @@ class Dot20:
         return False
 
     # 获取to地址的授权量
-    def get_user_approve_amount(self, tick: str, to: str, _from: str):
+    def get_user_approve(self, tick: str, to: str, _from: str):
         try:
             result = self.dota_db.get_user_approve_amount(tick, to, _from)
-            self.dota_db.session.commit()
             if result is not None:
-                return result[0]
+                return dict(result._mapping)
             else:
-                return -1
+                return None
         except Exception:
-            return -1
+            return None
 
     # 格式化json_data
     def fmt_json_data(self, op: str, **data) -> (dict, dict):
