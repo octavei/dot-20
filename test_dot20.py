@@ -31,8 +31,8 @@ class TestDot20():
                     "tick": "dota",
                     "decimal": 18,
                     "start": 273115,
-                    "max": 10000,
-                    "lim": 5000,
+                    "max": 100000,
+                    "lim": 10000,
                     "amt": 1000,
                     "end": 283115,
                     "admin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
@@ -166,7 +166,7 @@ class TestDot20():
                 }
             }
             transfer_json2 = {
-                "block_num": 273167,
+                "block_num": 273168,
                 "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
                 "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
                 "extrinsic_index": 2,
@@ -219,7 +219,7 @@ class TestDot20():
     def test_transfer_from(self):
         try:
             transfer_json = {
-                "block_num": 273154,
+                "block_num": 273170,
                 "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
                 "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
                 "extrinsic_index": 2,
@@ -285,9 +285,9 @@ if __name__ == '__main__':
     test = TestDot20()
 
     test.test_deploy()
-    # test.test_mint()
-    # test.test_transfer()
-    # test.test_approve()
-    # test.test_transfer_from()
+    test.test_mint()
+    test.test_transfer()
+    test.test_approve()
+    test.test_transfer_from()
 
     # test.test_filter()

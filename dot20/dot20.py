@@ -310,11 +310,11 @@ class Dot20:
     def get_total_supply(self, tick: str):
         try:
             result = self.dota_db.get_total_supply(tick)
-            if result is not None:
+            if result is not None and result[0] is not None:
                 return result[0]
             else:
-                return None
-        except Exception:
+                return 0
+        except Exception as e:
             return None
 
     # 获取用户余额
@@ -345,12 +345,15 @@ class Dot20:
             raise e
 
     # 验证mint是否结束
-    def is_mint_finish(self, block_num, _total=self.get_total_supply(tick), **deploy_info):
+    def is_mint_finish(self, block_num, _total=None, **deploy_info):
         mode, max, tick, end = (deploy_info.get(key)
                                 for key in ['mode', 'max', 'tick', 'end'])
         if mode == "normal":
-            total = _total
-            if max is not None and total is not None and total > max:
+            if _total is not None:
+                total = _total
+            else:
+                total = self.get_total_supply(tick)
+            if max is not None and total is not None and total >= max:
                 return True
         if mode == "fair":
             if end is not None and block_num is not None and block_num > end:
