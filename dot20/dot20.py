@@ -27,7 +27,7 @@ class Dot20:
         # 判断start高度需要大于等于区块高度
         if start < raw_json.get("block_num"):
             raise Exception(
-                "start must be equal to or later than the deployment block height")
+                "The start height must be greater than or equal to the block height")
 
         deploy_data = {
             "deployer": raw_json.get("user"),
@@ -39,10 +39,10 @@ class Dot20:
             **memo
         }
         try:
-            self.dota_db.create_tables_for_new_tick(tick)
             self.dota_db.insert_deploy_info(deploy_data)
         except Exception as e:
             raise e
+        return tick
 
     # 铸造
     def mint(self, **json_data):
@@ -57,9 +57,10 @@ class Dot20:
         if deploy_info is None:
             raise Exception(f"{tick}'s deploy does not exist")
 
-        # mint高度低于部署start高度
-        if raw_json.get("block_num") < deploy_info.get("start"):
-            raise Exception("mint height is lower than the start height")
+        # mint高度需要大于部署start高度
+        if raw_json.get("block_num") <= deploy_info.get("start"):
+            raise Exception(
+                "The mint height must be greater than the deployment start height")
 
         # 获取deploy中的模式
         mode = deploy_info.get("mode")
@@ -69,7 +70,11 @@ class Dot20:
             raise Exception("Unknown mode")
 
         # 判断mint是否结束
-        if self.is_mint_finish(raw_json.get("block_num"), **deploy_info) is True:
+        total = self.get_total_supply(tick)
+        if total is None:
+            raise Exception(
+                "Description mint failed to obtain the total amount")
+        if self.is_mint_finish(raw_json.get("block_num"), _total=total, **deploy_info) is True:
             raise Exception("Mint has ended")
 
         # lim是业务层根据模式计算后的值,可用于用户资产更新
@@ -83,6 +88,8 @@ class Dot20:
             if lim > deploy_lim:
                 raise Exception(
                     "The quantity must not be higher than a single mint quantity")
+            if total + lim > deploy_info.get("max"):
+                raise Exception("This mint, the total amount overflows")
 
         # 2.fair区块高度判断，在判断是否mint结束完成
 
@@ -338,11 +345,11 @@ class Dot20:
             raise e
 
     # 验证mint是否结束
-    def is_mint_finish(self, block_num, **deploy_info):
+    def is_mint_finish(self, block_num, _total=self.get_total_supply(tick), **deploy_info):
         mode, max, tick, end = (deploy_info.get(key)
                                 for key in ['mode', 'max', 'tick', 'end'])
         if mode == "normal":
-            total = self.get_total_supply(tick)
+            total = _total
             if max is not None and total is not None and total > max:
                 return True
         if mode == "fair":

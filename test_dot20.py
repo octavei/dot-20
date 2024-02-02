@@ -14,7 +14,7 @@ class TestDot20():
     def test_deploy(self):
         try:
 
-            deploy_json = {
+            deploy_json1 = {
                 "block_num": 273111,
                 "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
                 "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
@@ -39,13 +39,63 @@ class TestDot20():
                     "memo_remark": "1111"
                 }
             }
-            # self.dot20.deploy(**deploy_json)
-            # self.db.session.commit()
-            # self.test_mint()
-            self.test_transfer()
-            # self.db.session.commit()
+            deploy_json2 = {
+                "block_num": 273111,
+                "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
+                "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
+                "extrinsic_index": 2,
+                "batchall_index": 0,
+                "remark_index": 0,
+                "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
+                "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "memo": {
+                    "p": "dot-20",
+                    "op": "deploy",
+                    "mode": "owner",
+                    "tick": "dot",
+                    "decimal": 18,
+                    "start": 273115,
+                    "max": 10000,
+                    "lim": 5000,
+                    "amt": 1000,
+                    "end": 283115,
+                    "admin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                    "memo_remark": "1111"
+                }
+            }
+            deploy_json3 = {
+                "block_num": 273114,
+                "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
+                "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
+                "extrinsic_index": 2,
+                "batchall_index": 0,
+                "remark_index": 0,
+                "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
+                "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "memo": {
+                    "p": "dot-20",
+                    "op": "deploy",
+                    "mode": "owner",
+                    "tick": "dop",
+                    "decimal": 18,
+                    "start": 273115,
+                    "max": 10000,
+                    "lim": 5000,
+                    "amt": 1000,
+                    "end": 283115,
+                    "admin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                    "memo_remark": "1111"
+                }
+            }
+            with self.db.session.begin():
+                ticks = [self.dot20.deploy(**deploy_json1),
+                         #  self.dot20.deploy(**deploy_json2),
+                         self.dot20.deploy(**deploy_json3)]
+                for tick in ticks:
+                    self.db.create_tables_for_new_tick(tick)
         except Exception as e:
-            # self.db.session.commit()
             print(f"======DEPLOY_ERR=======\n{e}\n=================")
 
     def test_mint(self):
@@ -88,11 +138,10 @@ class TestDot20():
                     "memo_remark": "2222"
                 }
             }
-            self.dot20.mint(**mint_json1)
-            self.dot20.mint(**mint_json2)
-            # self.db.session.commit()
+            with self.db.session.begin():
+                self.dot20.mint(**mint_json1)
+                self.dot20.mint(**mint_json2)
         except Exception as e:
-            # self.db.session.commit()
             print(f"======MINT_ERR=======\n{e}\n=================")
 
     def test_transfer(self):
@@ -135,11 +184,10 @@ class TestDot20():
                     "memo_remark": "3333"
                 }
             }
-            self.dot20.transfer(**transfer_json1)
-            self.dot20.transfer(**transfer_json2)
-            self.db.session.commit()
+            with self.db.session.begin():
+                self.dot20.transfer(**transfer_json1)
+                self.dot20.transfer(**transfer_json2)
         except Exception as e:
-            self.db.session.commit()
             print(f"======TRANSFER_ERR=======\n{e}\n=================")
 
     def test_approve(self):
@@ -163,10 +211,9 @@ class TestDot20():
                     "memo_remark": "444444"
                 }
             }
-            self.dot20.approve(**approve_json)
-            self.db.session.commit()
+            with self.db.session.begin():
+                self.dot20.approve(**approve_json)
         except Exception as e:
-            self.db.session.commit()
             print(f"======APPROVE_ERR=======\n{e}\n=================")
 
     def test_transfer_from(self):
@@ -191,10 +238,9 @@ class TestDot20():
                     "memo_remark": ""
                 }
             }
-            self.dot20.transferFrom(**transfer_json)
-            self.db.session.commit()
+            with self.db.session.begin():
+                self.dot20.transferFrom(**transfer_json)
         except Exception as e:
-            self.db.session.commit()
             print(f"======TRANSFER_ERR=======\n{e}\n=================")
 
     def test_filter(self):
