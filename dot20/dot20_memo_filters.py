@@ -35,7 +35,7 @@ class Dot20MemoFilters:
                     "amt": {
                         "type": "number",
                         "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "start": {
@@ -51,13 +51,13 @@ class Dot20MemoFilters:
                     "max": {
                         "type": "number",
                         "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "lim": {
                         "type": "number",
                         "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "admin": {
@@ -84,11 +84,12 @@ class Dot20MemoFilters:
                             "properties": {
                                 "admin": {"is_address": "admin"}
                             },
-                            "required": ["admin"]
+                            "required": ["start", "admin"]
                         }
                     },
                 ],
-                "additionalProperties": False
+                "additionalProperties": False,
+                "custom_deploy_validator": "custom_deploy"
             },
             "mint": {
                 "type": "object",
@@ -106,7 +107,7 @@ class Dot20MemoFilters:
                     "lim": {
                         "type": "number",
                         "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "to": {
@@ -133,7 +134,7 @@ class Dot20MemoFilters:
                     "amt": {
                         "type": "number",
                         "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "to": {
@@ -187,7 +188,7 @@ class Dot20MemoFilters:
                     "amt": {
                         "type": "number",
                         "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "from": {
@@ -200,7 +201,8 @@ class Dot20MemoFilters:
                     },
                 },
                 "required": ["p", "op", "tick", "amt", "from", "to"],
-                "additionalProperties": False
+                "additionalProperties": False,
+                "custom_transfer_from_validator": "custom_transfer_from"
             },
             "memo": {
                 "type": "object",
@@ -270,6 +272,8 @@ class Dot20MemoFilters:
         all_validators = dict(Draft7Validator.VALIDATORS)
         all_validators['is_address'] = self.is_address
         all_validators['is_json_str'] = self.is_json_str
+        all_validators['custom_deploy_validator'] = self.custom_deploy_validator
+        all_validators['custom_transfer_from_validator'] = self.custom_transfer_from_validator
         self.custom_validator = validators.create(
             Draft7Validator.META_SCHEMA, all_validators)
 
@@ -314,15 +318,41 @@ class Dot20MemoFilters:
                 op)).validate(json_data)
             return True, "OK"
         except jsonschema.ValidationError as e:
-            return False, f"{e.message}"
+            return False, f"{e.relative_path}:{e.message}"
 
+    # address验证
     def is_address(self, validator, value, instance, schema):
         if is_valid_ss58_address(instance, self.valid_ss58_format) is not True:
             raise ValidationError(f"'{value}' Invalid address")
 
+    # json str 验证
     def is_json_str(_, validator, value, instance, schema):
         if isinstance(instance, str):
             try:
-                json.loads(instance)
+                s = json.loads(instance)
+                if not isinstance(s, dict):
+                    raise ValidationError(f"Not a json string")
             except json.JSONDecodeError as e:
                 raise ValidationError(f"{value}:{e.msg}")
+
+    # deploy的自定义验证
+    def custom_deploy_validator(self, validator, value, instance, schema):
+        start, end, lim, max, amt = (instance.get(key)
+                                     for key in ["start", "end", "lim", "max", "amt"])
+        if start is not None and end is not None and end <= start:
+            raise ValidationError(f"'end' is less than or equal to 'start'")
+
+        if lim is not None and max is not None and lim > max:
+            raise ValidationError(f"'lim' greater than 'max'")
+
+        if amt is not None and start is not None and end is not None and amt*(end-start+1) > 10 ** 32:
+            raise ValidationError(
+                f"'amt*(end-start+1)' must not be higher than 10^32")
+
+    # transferFrom的自定义验证
+    def custom_transfer_from_validator(self, validator, value, instance, schema):
+        _from, to = (instance.get(key)
+                     for key in ["from", "to"])
+        if _from is not None and to is not None and _from == to:
+            raise ValidationError(
+                f"The addresses of 'from' and 'to' are the same")

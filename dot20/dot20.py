@@ -34,22 +34,8 @@ class Dot20:
 
         # 1.常规模式（normal，单次mint获得固定数量铭文）
         # <start, max, lim>
-        if mode == "normal":
-            if lim == 0:
-                raise Exception("lim is 0")
-            if max == 0:
-                raise Exception("max is 0")
-            if lim > max:
-                raise Exception(
-                    "The amount of lim cast at a time cannot be higher than max")
-
         # 2.公平模式（fair，区块内平分铭文）
         # <amt, start, end>
-        if mode == "fair":
-            if amt*(end-start+1) > 10 ** 32:
-                raise Exception(
-                    "amt*(end-start+1) must not be higher than 10^32")
-
         # 3.控制者模式（owner，仅admin可以铸造铭文）
         # 地址必须性和可用性已经在memo_filter判定
 
@@ -97,8 +83,6 @@ class Dot20:
 
         # lim是业务层根据模式计算后的值,可用于用户资产更新
         lim = memo.get("lim")
-        if lim is None:
-            raise Exception("lim is none")
 
         # 1.normal
         if mode == "normal":
@@ -148,11 +132,6 @@ class Dot20:
         # 不能给自己转账
         if raw_json.get("user") == memo.get("to"):
             raise Exception("You can't transfer money to yourself")
-
-        # amt需要大于0
-        if memo.get("amt") <= 0:
-            raise Exception(
-                "The number of transfers is less than or equal to 0")
 
         # 验证tick是否存在并获取deploy info
         tick = memo.get("tick")
@@ -256,15 +235,6 @@ class Dot20:
             (raw_json, memo) = self.fmt_json_data("transferFrom", **json_data)
         except Exception as e:
             raise e
-
-        # 不能给自己转账
-        if memo.get("from") == memo.get("to"):
-            raise Exception("You can't transfer money to yourself")
-
-        # amt需要大于0
-        if memo.get("amt") <= 0:
-            raise Exception(
-                "The number of transfers is less than or equal to 0")
 
         # 验证tick是否存在并获取deploy info
         tick = memo.get("tick")
@@ -408,9 +378,9 @@ class Dot20:
     # 格式化json_data
     def fmt_json_data(self, op: str, **data) -> (dict, dict):
         # 检查原json格式
-        # (is_raw, raw_msg) = self.memo_filters.is_raw_json(json_data=data)
-        # if is_raw is not True:
-        #     raise Exception(f"{raw_msg}")
+        (is_raw, raw_msg) = self.memo_filters.is_raw_json(json_data=data)
+        if is_raw is not True:
+            raise Exception(f"{raw_msg}")
 
         # 检查memo json格式
         memo = data.get("memo")

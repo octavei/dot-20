@@ -103,33 +103,65 @@ class TestDot20(unittest.TestCase):
     #     except Exception as e:
     #         print(f"MINT_ERR::{e}\n")
 
+    def test_filter(self):
         #  filter的使用方法
 
         filter = Dot20MemoFilters(valid_ss58_format=42)
-        # # 分类方法
-        # filter.is_deploy_memo(memo_data={})
+        # 分类方法
+        (s, m) = filter.is_deploy_memo(memo_data={
+            "p": "dot-20",
+            "op": "deploy",
+            "mode": "normal",
+            "tick": "dota",
+            "decimal": 18,
+            "start": 1,
+            "max": 111,
+            "lim": 22,
+            "amt": 1999999,
+            "end": 10**32,
+            "admin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy"
+        })
+        print(f"{s} ------ {m}")
+
         # filter.is_mint_memo(memo_data={})
         # filter.is_transfer_memo(memo_data={})
         # filter.is_approve_memo(memo_data={})
-        # filter.is_transferFrom_memo(memo_data={})
-
+        # (s, m) = filter.is_transferFrom_memo(memo_data={
+        #     "p": "dot-20",
+        #     "op": "transferFrom",
+        #     "tick": "dota",
+        #     "amt": 0.000000000000000001,
+        #     "from": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+        #     "to": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL"
+        # })
+        # print(f"{s} ------ {m}")
         # # 只用一个方法
-        filter.is_memo_merge(op="deploy", memo_data={})
+        # filter.is_memo_merge(op="deploy", memo_data={})
 
         # # 原数据验证
-        transfer_json = {
-            "block_num": 273149,
-            "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
-            "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
-            "extrinsic_index": 2,
-            "batchall_index": 0,
-            "remark_index": 0,
-            "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
-            "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
-            "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
-            "memo": "{\"p\": \"dot-20\", \"op\": \"transferFrom\",\"tick\": \"dota\", \"amt\": 100,\"from\":\"5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy\", \"to\": \"5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL\"}"
-        }
-        filter.is_raw_json(json_data=transfer_json)
+        # transfer_json = {
+        #     "block_num": 273149,
+        #     "block_hash": "0x240079607dbb76c81b974be2256fbf79ed809995a973e1b3b1292c6b5ec4d7d0",
+        #     "extrinsic_hash": "0x9cef5f083d7ed72098bfe6768d65602d8fa196c696bcf3456a4e5a982e45aa7a",
+        #     "extrinsic_index": 2,
+        #     "batchall_index": 0,
+        #     "remark_index": 0,
+        #     "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
+        #     "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+        #     "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+        #     "memo": "True"
+        #     # "memo": {
+        #     #     "p": "dot-20",
+        #     #     "op": "transferFrom",
+        #     #     "tick": "dota",
+        #     #     "amt": 100,
+        #     #     "from": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+        #     #     "to": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL"
+        #     # }
+        #     # "memo": "{\"p\": \"dot-20\", \"op\": \"transferFrom\",\"tick\": \"dota\", \"amt\": 100,\"from\":\"5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy\", \"to\": \"5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL\"}"
+        # }
+        # (is_raw, raw_msg) = filter.is_raw_json(json_data=transfer_json)
+        # print(f"{is_raw} ------ {raw_msg}")
 
 
 if __name__ == '__main__':
