@@ -57,6 +57,10 @@ class Dot20:
         if deploy_info is None:
             raise Exception(f"{tick}'s deploy does not exist")
 
+        # mint高度低于部署start高度
+        if raw_json.get("block_num") < deploy_info.get("start"):
+            raise Exception("mint height is lower than the start height")
+
         # 获取deploy中的模式
         mode = deploy_info.get("mode")
         if mode is None:
@@ -151,6 +155,8 @@ class Dot20:
             "tick": memo.get("tick"),
             "type": 0,
         }
+        if memo.get("memo_remark") is not None:
+            transfer_data["memo_remark"] = memo.get("memo_remark")
 
         try:
 
@@ -200,6 +206,8 @@ class Dot20:
             "batchall_index": raw_json.get("batchall_index"),
             "remark_index": raw_json.get("remark_index"),
         }
+        if memo.get("memo_remark") is not None:
+            approve_history_data["memo_remark"] = memo.get("memo_remark")
 
         try:
             # 1.更新approve
@@ -259,6 +267,8 @@ class Dot20:
             "tick": memo.get("tick"),
             "type": 1,
         }
+        if memo.get("memo_remark") is not None:
+            transfer_from_data["memo_remark"] = memo.get("memo_remark")
 
         try:
 

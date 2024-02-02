@@ -63,6 +63,10 @@ class Dot20MemoFilters:
                     "admin": {
                         "type": "string",
                     },
+                    "memo_remark": {
+                        "type": "string",
+                        "maxLength": 1024,
+                    }
                 },
                 "required": ["p", "op", "tick", "mode"],
                 "allOf": [
@@ -114,6 +118,10 @@ class Dot20MemoFilters:
                         "type": "string",
                         "is_address": "to"
                     },
+                    "memo_remark": {
+                        "type": "string",
+                        "maxLength": 1024,
+                    }
                 },
                 "required": ["p", "op", "tick", "lim", "to"],
                 "additionalProperties": False
@@ -141,6 +149,10 @@ class Dot20MemoFilters:
                         "type": "string",
                         "is_address": "to"
                     },
+                    "memo_remark": {
+                        "type": "string",
+                        "maxLength": 1024,
+                    }
                 },
                 "required": ["p", "op", "tick", "amt", "to"],
                 "additionalProperties": False
@@ -168,6 +180,10 @@ class Dot20MemoFilters:
                         "type": "string",
                         "is_address": "to"
                     },
+                    "memo_remark": {
+                        "type": "string",
+                        "maxLength": 1024,
+                    }
                 },
                 "required": ["p", "op", "tick", "amt", "to"],
                 "additionalProperties": False
@@ -199,6 +215,10 @@ class Dot20MemoFilters:
                         "type": "string",
                         "is_address": "to"
                     },
+                    "memo_remark": {
+                        "type": "string",
+                        "maxLength": 1024,
+                    }
                 },
                 "required": ["p", "op", "tick", "amt", "from", "to"],
                 "additionalProperties": False,
