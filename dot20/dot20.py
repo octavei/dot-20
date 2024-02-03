@@ -262,8 +262,6 @@ class Dot20:
         # 是否已经授权
         approve = self.get_user_approve(
             memo.get("tick"), raw_json.get("user"), memo.get("from"))
-        print(
-            f"=-=-=-=-=-=-=-={raw_json.get('user'), memo.get('from')}::::\n{approve}-=-=-=-=-=-=-=-=-")
         if approve is None:
             raise Exception("Transfers not approved")
         if memo.get("amt") > approve.get("amount"):
@@ -325,7 +323,7 @@ class Dot20:
             else:
                 return 0
         except Exception as e:
-            return None
+            raise e
 
     # 获取用户余额
     def get_user_currency_balance(self, tick: str, user: str):
@@ -347,12 +345,12 @@ class Dot20:
             if user_currency_balance is None:
                 user_currency_balance = {
                     "tick": tick, "user": user, "balance": 0}
-                balance = user_currency_balance.get("balance")
-                if balance + amount < 0:
-                    raise Exception(f"{user} insufficient balance")
-                user_currency_balance["balance"] += amount
-                self.dota_db.insert_or_update_user_currency_balance(
-                    tick, [user_currency_balance])
+            balance = user_currency_balance.get("balance")
+            if balance + amount < 0:
+                raise Exception(f"{user} insufficient balance")
+            user_currency_balance["balance"] += amount
+            self.dota_db.insert_or_update_user_currency_balance(
+                tick, [user_currency_balance])
         except Exception as e:
             raise e
 
