@@ -195,6 +195,10 @@ class Dot20:
         if deploy_info is None:
             raise Exception(f"{tick}'s deploy does not exist")
 
+        # 检查授权用户余额是否存在
+        if self.get_user_currency_balance(tick, raw_json.get("user")) is None:
+            raise Exception("The approve user does not exist")
+
         approve_data = {
             "user": memo.get("to"),
             "from_address": raw_json.get("user"),
@@ -232,6 +236,10 @@ class Dot20:
         except Exception as e:
             raise e
 
+        # 被授权人不能等于授权人
+        if raw_json.get("user") == memo.get("from"):
+            raise Exception("The approved person is himself")
+
         # 验证tick是否存在并获取deploy info
         tick = memo.get("tick")
         deploy_info = self.get_deploy_info(tick)
@@ -253,9 +261,11 @@ class Dot20:
 
         # 是否已经授权
         approve = self.get_user_approve(
-            memo.get("tick"), memo.get("to"), memo.get("from"))
+            memo.get("tick"), raw_json.get("user"), memo.get("from"))
+        print(
+            f"=-=-=-=-=-=-=-={raw_json.get('user'), memo.get('from')}::::\n{approve}-=-=-=-=-=-=-=-=-")
         if approve is None:
-            raise Exception("Unauthorized transfers")
+            raise Exception("Transfers not approved")
         if memo.get("amt") > approve.get("amount"):
             raise Exception(
                 "The transfer amount is greater than the authorized amount")
@@ -279,7 +289,7 @@ class Dot20:
 
         try:
 
-            # 1.from扣款[余额异常会抛异常]
+            # 1.from扣款[余额异常会抛异常] [同时判断授权转账金额]
             self.update_user_currency_balance(
                 tick, memo.get("from"), -memo.get("amt"))
             # 2.to进账
@@ -325,7 +335,7 @@ class Dot20:
             if result is not None:
                 return dict(result._mapping)
             else:
-                return {"tick": tick, "user": user, "balance": 0}
+                return None
         except Exception as e:
             raise e
 
@@ -334,10 +344,12 @@ class Dot20:
         try:
             user_currency_balance = self.get_user_currency_balance(
                 tick, user)
-            if user_currency_balance is not None:
+            if user_currency_balance is None:
+                user_currency_balance = {
+                    "tick": tick, "user": user, "balance": 0}
                 balance = user_currency_balance.get("balance")
                 if balance + amount < 0:
-                    raise Exception(f"{user} Insufficient balance")
+                    raise Exception(f"{user} insufficient balance")
                 user_currency_balance["balance"] += amount
                 self.dota_db.insert_or_update_user_currency_balance(
                     tick, [user_currency_balance])
@@ -361,15 +373,15 @@ class Dot20:
         return False
 
     # 获取to地址的授权量
-    def get_user_approve(self, tick: str, to: str, _from: str):
+    def get_user_approve(self, tick: str, user: str, _from: str):
         try:
-            result = self.dota_db.get_user_approve_amount(tick, to, _from)
+            result = self.dota_db.get_user_approve_amount(tick, user, _from)
             if result is not None:
                 return dict(result._mapping)
             else:
                 return None
-        except Exception:
-            return None
+        except Exception as e:
+            raise e
 
     # 格式化json_data
     def fmt_json_data(self, op: str, **data) -> (dict, dict):

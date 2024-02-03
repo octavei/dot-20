@@ -179,8 +179,8 @@ class TestDot20():
                     "p": "dot-20",
                     "op": "transfer",
                     "tick": "dota",
-                    "amt": 100,
-                    "to": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+                    "amt": 1000,
+                    "to": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
                     "memo_remark": "3333"
                 }
             }
@@ -200,8 +200,8 @@ class TestDot20():
                 "batchall_index": 0,
                 "remark_index": 0,
                 "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
-                "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
-                "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "origin": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+                "user": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
                 "memo": {
                     "p": "dot-20",
                     "op": "approve",
@@ -226,22 +226,22 @@ class TestDot20():
                 "batchall_index": 0,
                 "remark_index": 0,
                 "remark_hash": "0x98f4b6890ae25bb9dd975a50f320fc1ab0cfbbd92673a55c9fc58ffac25aedfb",
-                "origin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
-                "user": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+                "origin": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+                "user": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
                 "memo": {
                     "p": "dot-20",
                     "op": "transferFrom",
                     "tick": "dota",
                     "amt": 100,
-                    "from": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
-                    "to": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+                    "from": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+                    "to": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
                     "memo_remark": ""
                 }
             }
             with self.db.session.begin():
                 self.dot20.transferFrom(**transfer_json)
         except Exception as e:
-            print(f"======TRANSFER_ERR=======\n{e}\n=================")
+            print(f"======TRANSFER_FROM_ERR=======\n{e}\n=================")
 
     def test_filter(self):
 
