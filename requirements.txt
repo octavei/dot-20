@@ -5,7 +5,7 @@ cffi==1.16.0
 charset-normalizer==3.3.2
 cytoolz==0.12.2
 docopt==0.6.2
-dotadb @ git+https://github.com/octavei/dota-indexer-db.git@5b757acaa995d94b23181b8b10bea36d7a0579ef
+dotadb @ git+https://github.com/octavei/dota-indexer-db.git@fd22e7bc43b6164739a61fb14e0ebbec1dc42835
 ecdsa==0.18.0
 eth-hash==0.6.0
 eth-keys==0.5.0
