@@ -346,7 +346,7 @@ class Dot20:
                 user_currency_balance = {
                     "tick": tick, "user": user, "balance": 0}
             balance = user_currency_balance.get("balance")
-            if balance + amount < 0:
+            if amount < 0 and balance + amount < 0:
                 raise Exception(f"{user} insufficient balance")
             user_currency_balance["balance"] += amount
             self.dota_db.insert_or_update_user_currency_balance(

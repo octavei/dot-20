@@ -33,8 +33,7 @@ class Dot20MemoFilters:
                         "enum": ["normal", "fair", "owner"]
                     },
                     "amt": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
+                        "type": "integer",
                         "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
@@ -49,14 +48,12 @@ class Dot20MemoFilters:
                         "maximum": 10**32,
                     },
                     "max": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
+                        "type": "integer",
                         "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "lim": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
+                        "type": "integer",
                         "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
@@ -109,8 +106,7 @@ class Dot20MemoFilters:
                         "pattern": "^[a-zA-Z]{3,6}$"
                     },
                     "lim": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
+                        "type": "integer",
                         "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
@@ -140,8 +136,7 @@ class Dot20MemoFilters:
                         "pattern": "^[a-zA-Z]{3,6}$"
                     },
                     "amt": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
+                        "type": "integer",
                         "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
@@ -171,9 +166,8 @@ class Dot20MemoFilters:
                         "pattern": "^[a-zA-Z]{3,6}$"
                     },
                     "amt": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
-                        "minimum": 0,
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
                     "to": {
@@ -202,8 +196,7 @@ class Dot20MemoFilters:
                         "pattern": "^[a-zA-Z]{3,6}$"
                     },
                     "amt": {
-                        "type": "number",
-                        "multipleOf": 1e-18,
+                        "type": "integer",
                         "exclusiveMinimum": 0,
                         "maximum": 10**32,
                     },
