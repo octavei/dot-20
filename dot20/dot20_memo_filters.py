@@ -290,36 +290,28 @@ class Dot20MemoFilters:
         self.custom_validator = validators.create(
             Draft7Validator.META_SCHEMA, all_validators)
 
-    # 判断是否是deploy的memo
     def is_deploy_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("deploy", json_data=memo_data)
 
-    # 判断是否是mint的memo
     def is_mint_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("mint", json_data=memo_data)
 
-    # 判断是否是transfer的memo
     def is_transfer_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("transfer", json_data=memo_data)
 
-    # 判断是否是approve的memo
     def is_approve_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("approve", json_data=memo_data)
 
-    # 判断是否是transferFrom的memo
     def is_transferFrom_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("transferFrom", json_data=memo_data)
 
-    # 判断是否是memo的memo
     def is_memo_memo(self, memo_data: object) -> (bool, str):
         return self.__is_xx_json("memo", json_data=memo_data)
 
-    # 判断原json格式
     def is_raw_json(self, json_data: object) -> (bool, str):
         return self.__is_xx_json("rawJson", json_data=json_data)
 
-    # 判断是否是memo的合并方法，需要手动传入op
-    # op: enum["deploy","mint","transfer","approve","transferFrom", "rawJson","memo"]
+    # op: ["deploy","mint","transfer","approve","transferFrom", "rawJson","memo"]
     def is_memo_merge(self, op: str, memo_data: object) -> (bool, str):
         if not op in self._schemas:
             return False, "There is no matching schema"
@@ -333,12 +325,10 @@ class Dot20MemoFilters:
         except jsonschema.ValidationError as e:
             return False, f"{e.relative_path}:{e.message}"
 
-    # address验证
     def is_address(self, validator, value, instance, schema):
         if is_valid_ss58_address(instance, self.valid_ss58_format) is not True:
             raise ValidationError(f"'{value}' Invalid address")
 
-    # json str 验证
     def is_json_str(_, validator, value, instance, schema):
         if isinstance(instance, str):
             try:
@@ -362,7 +352,6 @@ class Dot20MemoFilters:
             raise ValidationError(
                 f"'amt*(end-start+1)' must not be higher than 10^32")
 
-    # transferFrom的自定义验证
     def custom_transfer_from_validator(self, validator, value, instance, schema):
         _from, to = (instance.get(key)
                      for key in ["from", "to"])

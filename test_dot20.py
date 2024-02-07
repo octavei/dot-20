@@ -246,7 +246,6 @@ class TestDot20():
     def test_filter(self):
 
         filter = Dot20MemoFilters(valid_ss58_format=42)
-        # 1.独立的方法
         (s, m) = filter.is_deploy_memo(memo_data={
             "p": "dot-20",
             "op": "deploy",
@@ -277,7 +276,6 @@ class TestDot20():
         # })
         # print(f"{s} ------ {m}")
 
-        # 2.手动传入'op'的方法
         # filter.is_memo_merge(op="deploy", memo_data={})
 
 
