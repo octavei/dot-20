@@ -338,7 +338,6 @@ class Dot20MemoFilters:
             except json.JSONDecodeError as e:
                 raise ValidationError(f"{value}:{e.msg}")
 
-    # deploy的自定义验证
     def custom_deploy_validator(self, validator, value, instance, schema):
         start, end, lim, max, amt = (instance.get(key)
                                      for key in ["start", "end", "lim", "max", "amt"])
