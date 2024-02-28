@@ -100,7 +100,7 @@ class Dot20:
         try:
             self.dota_db.insert_mint_info(tick, [mint_data])
             self.update_user_currency_balance(
-                tick, raw_json.get("user"), lim)
+                tick, memo.get("to"), lim)
         except Exception as e:
             raise e
 

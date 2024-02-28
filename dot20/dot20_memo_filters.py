@@ -21,7 +21,7 @@ class Dot20MemoFilters:
                     },
                     "tick": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z]{3,6}$"
+                        "pattern": "^[a-zA-Z]{3,8}$"
                     },
                     "decimal": {
                         "type": "integer",
@@ -103,7 +103,7 @@ class Dot20MemoFilters:
                     },
                     "tick": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z]{3,6}$"
+                        "pattern": "^[a-zA-Z]{3,8}$"
                     },
                     "lim": {
                         "type": "integer",
@@ -133,7 +133,7 @@ class Dot20MemoFilters:
                     },
                     "tick": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z]{3,6}$"
+                        "pattern": "^[a-zA-Z]{3,8}$"
                     },
                     "amt": {
                         "type": "integer",
@@ -163,7 +163,7 @@ class Dot20MemoFilters:
                     },
                     "tick": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z]{3,6}$"
+                        "pattern": "^[a-zA-Z]{3,8}$"
                     },
                     "amt": {
                         "type": "integer",
@@ -193,7 +193,7 @@ class Dot20MemoFilters:
                     },
                     "tick": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z]{3,6}$"
+                        "pattern": "^[a-zA-Z]{3,8}$"
                     },
                     "amt": {
                         "type": "integer",
