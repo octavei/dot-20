@@ -97,10 +97,14 @@ class Dot20:
             "remark_index": raw_json.get("remark_index"),
             **memo
         }
+
+        _to = memo.get("to")
+        if _to is None:
+            _to = raw_json.get("user")
+
         try:
             self.dota_db.insert_mint_info(tick, [mint_data])
-            self.update_user_currency_balance(
-                tick, memo.get("to"), lim)
+            self.update_user_currency_balance(tick, _to, lim)
         except Exception as e:
             raise e
 

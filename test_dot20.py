@@ -246,23 +246,31 @@ class TestDot20():
     def test_filter(self):
 
         filter = Dot20MemoFilters(valid_ss58_format=42)
-        (s, m) = filter.is_deploy_memo(memo_data={
+        # (s, m) = filter.is_deploy_memo(memo_data={
+        #     "p": "dot-20",
+        #     "op": "deploy",
+        #     "mode": "normal",
+        #     "tick": "dota",
+        #     "decimal": 18,
+        #     "start": 1,
+        #     "max": 111,
+        #     "lim": 22,
+        #     "amt": 1999999,
+        #     "end": 10,
+        #     "admin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+        #     "memo_remark": ""
+        # })
+        # print(f"{s} ------ {m}")
+
+        (s, m) = filter.is_mint_memo(memo_data={
             "p": "dot-20",
-            "op": "deploy",
-            "mode": "normal",
+            "op": "mint",
             "tick": "dota",
-            "decimal": 18,
-            "start": 1,
-            "max": 111,
-            "lim": 22,
-            "amt": 1999999,
-            "end": 10,
-            "admin": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
+            "lim": 1,
+            # "to": "5FTcboVf86hubC8YJjo8LjK3c2uq2rWpK7idnrfazi4ePuZy",
             "memo_remark": ""
         })
         print(f"{s} ------ {m}")
-
-        # filter.is_mint_memo(memo_data={})
         # filter.is_transfer_memo(memo_data={})
         # filter.is_approve_memo(memo_data={})
         # filter.is_memo_memo(memo_data={})
@@ -286,6 +294,6 @@ if __name__ == '__main__':
     # test.test_mint()
     # test.test_transfer()
     # test.test_approve()
-    test.test_transfer_from()
+    # test.test_transfer_from()
 
-    # test.test_filter()
+    test.test_filter()

@@ -119,7 +119,7 @@ class Dot20MemoFilters:
                         "maxLength": 1024,
                     }
                 },
-                "required": ["p", "op", "tick", "lim", "to"],
+                "required": ["p", "op", "tick", "lim"],
                 "additionalProperties": False
             },
             "transfer": {
